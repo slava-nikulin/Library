@@ -1,0 +1,32 @@
+﻿@model Library0.Models.AccountRoomModel
+
+@if (Model.LibraryUser.UserBookCollection.Count == 0)
+{
+    <span>You didn't take out any books yet</span>
+}
+else
+{
+    <table>
+        <tr>
+            <th>Book name</th>
+            <th>Author</th>
+            <th>Term</th>
+        </tr>
+
+        @foreach (var book in Model.LibraryUser.UserBookCollection)
+        {
+            <tr>
+                <td>
+                    @book.Book.Name
+                </td>
+                <td>
+                    @book.Book.Author
+                </td>
+                <td>
+                    @string.Format("{0} - {1}", book.StartDate.ToShortDateString(), book.EndDate.ToShortDateString())
+                </td>
+            </tr>
+        }
+    </table>
+}
+

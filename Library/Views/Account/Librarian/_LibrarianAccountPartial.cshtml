@@ -1,0 +1,26 @@
+﻿@model Library0.Models.AccountRoomModel
+
+<div id="tabs">
+    <ul>
+        <li><a href="#tabs-1">Books issuing</a></li>
+        <li><a href="#tabs-2">Books</a></li>
+        <li><a href="#tabs-3">Users</a></li>
+        <li><a href="#tabs-4">Manage account</a></li>
+    </ul>
+    <div id="tabs-1">
+        @(Html.Partial("Librarian/_BooksForIssue"))
+    </div>
+    <div id="tabs-2">
+        @(Html.Partial("Librarian/_EditBooksDatabasePartial"))
+
+        
+        
+
+    </div>
+    <div id="tabs-3">
+        @(Html.Partial("Librarian/_EditUsersDatabasePartial"))
+    </div>
+    <div id="tabs-4">
+        @(Html.Partial("_ChangePasswordPartial"))
+    </div>
+</div>

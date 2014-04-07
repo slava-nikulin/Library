@@ -1,0 +1,35 @@
+﻿@model Library0.Models.AccountRoomModel
+
+@if (Model.AllBooks.Count == 0)
+{
+    <span>There is no books in the library yet</span>
+}
+else
+{
+    <table>
+        <tr>
+            <th>Book ID</th>
+            <th>Book name</th>
+            <th>Author</th>
+            <th>ISBN</th>
+        </tr>
+
+        @foreach (var book in Model.AllBooks)
+        {
+            <tr>
+                <td>
+                    @book.BookId
+                </td>
+                <td>
+                    @book.Name
+                </td>
+                <td>
+                    @book.Author
+                </td>
+                <td>
+                    @book.ISBN
+                </td>
+            </tr>
+        }
+    </table>
+}

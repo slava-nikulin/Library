@@ -1,0 +1,16 @@
+﻿<div id="tabs">
+    <ul>
+        <li><a href="#tabs-1">Taken books</a></li>
+        <li><a href="#tabs-2">Books taking out</a></li>
+        <li><a href="#tabs-3">Manage account</a></li>
+    </ul>
+    <div id="tabs-1">
+        @(Html.Partial("Reader/_BooksTakenPartial"))    
+    </div>
+    <div id="tabs-2">
+        @(Html.Partial("Reader/_BooksTakingOutPartial"))
+    </div>
+    <div id="tabs-3">
+        @(Html.Partial("_ChangePasswordPartial"))
+    </div>
+</div>
