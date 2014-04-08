@@ -16,7 +16,7 @@ namespace LibraryDAL
         public LibraryContext()
             : base("Library_dbConnection")
         {
-            Database.SetInitializer(new MigrateDatabaseToLatestVersion<LibraryContext, LibraryDAL.Migrations.Configuration>());
+            
         }
 
         public DbSet<LibraryUser> LibraryUsers { get; set; }
@@ -35,7 +35,10 @@ namespace LibraryDAL
             modelBuilder.Entity<LibraryUser>()
                 .HasMany(c => c.UserBookCollection)
                 .WithRequired()
-                .HasForeignKey(c => c.LibraryUserId);
+                .HasForeignKey(c => c.LibraryUserId)
+                .WillCascadeOnDelete(true);
+
+            Database.SetInitializer(new CreateDatabaseIfNotExists<LibraryContext>());
         }
     }
 
@@ -69,6 +72,7 @@ namespace LibraryDAL
         [DatabaseGeneratedAttribute(DatabaseGeneratedOption.Identity)]
         public int LibraryUserId { get; set; }
         public string UserName { get; set; }
+        public string Email { get; set; }
 
         public virtual ICollection<UserBook> UserBookCollection { get; set; }
     }

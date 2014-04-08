@@ -100,7 +100,18 @@ namespace Library0.Controllers
                     }
                     else
                     {
-                        WebSecurity.CreateUserAndAccount(model.UserName, model.Password);
+                        using (var con = new LibraryContext())
+                        {
+                            if (con.LibraryUsers.Any(usr => usr.Email == model.Email))
+                            {
+                                ModelState.AddModelError("", "User with this email already exists");
+                                return View(model);
+                            }
+                        }
+                        WebSecurity.CreateUserAndAccount(model.UserName, model.Password, new
+                        {
+                            Email = model.Email
+                        });
                         Roles.AddUsersToRoles(new[] { model.UserName }, new[] { model.IsLibrarian ? "Librarian" : "Reader" });
                         WebSecurity.Login(model.UserName, model.Password);
                     }
@@ -162,9 +173,8 @@ namespace Library0.Controllers
 
         public ActionResult Manage() //ManageMessageId? message
         {
-            var isLibrarian = User.IsInRole("Librarian");
-            ViewBag.CurrentUserRole = isLibrarian;
-            if (isLibrarian)
+            ViewBag.IsLibrarian = User.IsInRole("Librarian");
+            if (ViewBag.IsLibrarian)
             {
                 var model = new AccountRoomModel();
                 using (var con = new LibraryContext())

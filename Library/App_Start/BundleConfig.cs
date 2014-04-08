@@ -26,6 +26,10 @@ namespace Library0
             bundles.Add(new ScriptBundle("~/bundles/modernizr").Include(
                         "~/Scripts/modernizr-*"));
 
+            bundles.Add(new ScriptBundle("~/bundles/LibrarianViewModels").Include(
+                        "~/Scripts/BooksViewModel.js",
+                        "~/Scripts/UsersViewModel.js"));
+
             bundles.Add(new ScriptBundle("~/bundles/bootstrapjs").Include(
                         "~/Scripts/bootstrap.js"));
 

@@ -38,6 +38,8 @@ namespace Library0.Models
         public List<Book> AllBooks { get; set; }
  
         public CrudBookModel EditBook { get; set; }
+
+        public RegisterModel AddUser { get; set; }
     }
 
     public class CrudBookModel
@@ -91,6 +93,12 @@ namespace Library0.Models
         [Display(Name = "Confirm password")]
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
         public string ConfirmPassword { get; set; }
+
+        [Required]
+        [Display(Name = "Email address")]
+        [DataType(DataType.EmailAddress)]
+        [EmailAddress]
+        public string Email { get; set; }
 
         [Display(Name = "Are you librarian?")]
         public bool IsLibrarian { get; set; }
