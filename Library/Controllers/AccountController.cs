@@ -10,10 +10,10 @@ using DotNetOpenAuth.AspNet;
 using LibraryDAL;
 using Microsoft.Web.WebPages.OAuth;
 using WebMatrix.WebData;
-using Library0.Filters;
-using Library0.Models;
+using Library.Filters;
+using Library.Models;
 
-namespace Library0.Controllers
+namespace Library.Controllers
 {
     [Authorize]
     [InitializeSimpleMembership]
@@ -174,26 +174,21 @@ namespace Library0.Controllers
         public ActionResult Manage() //ManageMessageId? message
         {
             ViewBag.IsLibrarian = User.IsInRole("Librarian");
-            if (ViewBag.IsLibrarian)
+
+            var model = new AccountRoomModel();
+            using (var con = new LibraryContext())
             {
-                var model = new AccountRoomModel();
-                using (var con = new LibraryContext())
-                {
-                    model.LibraryUser = con.LibraryUsers.Include("UserBookCollection")
-                        .SingleOrDefault(la => la.LibraryUserId == WebSecurity.CurrentUserId);
+                model.LibraryUser = con.LibraryUsers.Include("UserBookCollection")
+                    .SingleOrDefault(la => la.LibraryUserId == WebSecurity.CurrentUserId);
 
-                    model.AllBooks = con.Books.Take(10).ToList();
+                model.AllBooks = con.Books.Take(10).ToList();
 
-                    model.PasswordModel = new LocalPasswordModel();
-                    model.EditBook = new CrudBookModel();
-                }
-
-                return View(model);
+                model.PasswordModel = new LocalPasswordModel();
+                model.EditBook = new CrudBookModel();
             }
-            else
-            {
-                return View();
-            }
+
+            return View(model);
+
         }
 
         //

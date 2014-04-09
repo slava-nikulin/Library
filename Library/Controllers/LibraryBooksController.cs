@@ -6,11 +6,11 @@ using System.Net.Http;
 using System.Runtime.Serialization;
 using System.Web.Http;
 using System.Web.Mvc;
-using Library0.Models;
+using Library.Models;
 using LibraryDAL;
 using Newtonsoft.Json;
 
-namespace Library0.Controllers
+namespace Library.Controllers
 {
     [System.Web.Http.Authorize]
     public class LibraryBooksController : ApiController

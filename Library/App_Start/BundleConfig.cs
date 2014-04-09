@@ -1,7 +1,7 @@
 ﻿using System.Web;
 using System.Web.Optimization;
 
-namespace Library0
+namespace Library
 {
     public class BundleConfig
     {
@@ -29,6 +29,10 @@ namespace Library0
             bundles.Add(new ScriptBundle("~/bundles/LibrarianViewModels").Include(
                         "~/Scripts/BooksViewModel.js",
                         "~/Scripts/UsersViewModel.js"));
+
+            bundles.Add(new ScriptBundle("~/bundles/ReaderViewModels").Include(
+                        "~/Scripts/ReaderBooksViewModel.js"
+                        ));
 
             bundles.Add(new ScriptBundle("~/bundles/bootstrapjs").Include(
                         "~/Scripts/bootstrap.js"));

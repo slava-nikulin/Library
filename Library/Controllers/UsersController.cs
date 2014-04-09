@@ -7,11 +7,11 @@ using System.Runtime.Serialization;
 using System.Web;
 using System.Web.Http;
 using System.Web.Security;
-using Library0.Models;
+using Library.Models;
 using LibraryDAL;
 using WebMatrix.WebData;
 
-namespace Library0.Controllers
+namespace Library.Controllers
 {
 
     [System.Web.Http.Authorize]

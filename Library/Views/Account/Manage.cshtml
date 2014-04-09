@@ -1,5 +1,5 @@
-﻿@using Library0.Controllers
-@model Library0.Models.AccountRoomModel
+﻿@using Library.Controllers
+@model Library.Models.AccountRoomModel
 @{
     ViewBag.Title = "Manage Account";
 }
@@ -26,6 +26,11 @@
             <text>$(document).ready(function () {
             ko.applyBindings(new BooksViewModel(), document.getElementById("books-crud"));
             ko.applyBindings(new UsersViewModel(), document.getElementById("users-crud"));
+            });</text>
+        }
+        else {
+            <text>$(document).ready(function () {
+                ko.applyBindings(new ReaderBooksViewModel(), document.getElementById("books-view"));
             });</text>
         }
     </script>

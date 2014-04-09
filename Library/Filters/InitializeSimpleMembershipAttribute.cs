@@ -5,9 +5,9 @@ using System.Threading;
 using System.Web.Mvc;
 using LibraryDAL;
 using WebMatrix.WebData;
-using Library0.Models;
+using Library.Models;
 
-namespace Library0.Filters
+namespace Library.Filters
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
     public sealed class InitializeSimpleMembershipAttribute : ActionFilterAttribute
