@@ -30,7 +30,10 @@
         }
         else {
             <text>$(document).ready(function () {
-                ko.applyBindings(new ReaderBooksViewModel(), document.getElementById("books-view"));
+                var readerModel = new ReaderBooksViewModel();
+                readerModel.getUserBookCollection();
+                ko.applyBindings(readerModel, document.getElementById("books-view"));
+                ko.applyBindings(readerModel, document.getElementById("reserved-books-view"));
             });</text>
         }
     </script>

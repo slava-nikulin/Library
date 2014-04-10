@@ -1,32 +1,29 @@
 ﻿@model Library.Models.AccountRoomModel
 
-@if (Model.LibraryUser.UserBookCollection.Count == 0)
-{
-    <span>You didn't take out any books yet</span>
-}
-else
-{
-    <table>
-        <tr>
-            <th>Book name</th>
-            <th>Author</th>
-            <th>Term</th>
-        </tr>
+<div id="reserved-books-view">
+    <h3></h3>
 
-        @foreach (var book in Model.LibraryUser.UserBookCollection)
-        {
-            <tr>
-                <td>
-                    @book.Book.Name
-                </td>
-                <td>
-                    @book.Book.Author
-                </td>
-                <td>
-                    @string.Format("{0} - {1}", book.StartDate.ToShortDateString(), book.EndDate.ToShortDateString())
-                </td>
-            </tr>
-        }
-    </table>
-}
+    <span data-bind="if: userBookCollection().length == 0">You didn't borrow any books yet</span>
+
+    <div class="container-fluid">
+        <table class="table table-striped table-bordered .table-condensed" data-bind="ifnot: userBookCollection().length == 0">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Author</th>
+                    <th>Term</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody data-bind="foreach: userBookCollection">
+                <tr>
+                    <td data-bind="text: Name"></td>
+                    <td data-bind="text: Author"></td>
+                    <td data-bind="text: StartDate + ' - ' + EndDate"></td>
+                    <td data-bind="text: Status"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
 

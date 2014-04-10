@@ -1,4 +1,11 @@
 ﻿
+var BasicUserBookModel = function () {
+    this.BookId = 0;
+    this.EndDate = "";
+    this.LibraryUserId = 0;
+    this.EndDate = "";
+};
+
 var ReaderBooksViewModel = function () {
     var self = this;
     self.lines = ko.observableArray();
@@ -89,24 +96,52 @@ var ReaderBooksViewModel = function () {
     self.getSetUnselectableDates = function (data) {
         self.selectedLine(data);
         $.ajax({
-            url: "/api/BorrowingBooks/GetBookBorrowingData?id=" + data.BookId,
+            url: "/api/BorrowingBooks/GetBookBorrowingData?bookId=" + data.BookId,
             type: "GET",
             datatype: 'json'
         }).done(function (disabledDates) {
-            $("#datepickerTo").datepicker({ dateFormat: 'dd-mm-yy' });
-            $("#datepickerFrom").datepicker({ dateFormat: 'dd-mm-yy' });
+            var a = disabledDates;
+            $("#datepickerTo").datepicker({
+                dateFormat: 'dd-mm-yy',
+                beforeShowDay: function (date) {
+                    var string = jQuery.datepicker.formatDate('dd-mm-yy', date);
+                    return [disabledDates.indexOf(string) == -1];
+                }
+            });
+            $("#datepickerFrom").datepicker({
+                dateFormat: 'dd-mm-yy',
+                beforeShowDay: function (date) {
+                    var string = jQuery.datepicker.formatDate('dd-mm-yy', date);
+                    return [disabledDates.indexOf(string) == -1];
+                }
+            });
         });
     };
 
     self.reserveBook = function (formElement) {
         if ($("#borrow-book-form").valid()) {
             $.post("/api/BorrowingBooks/ReserveTheBook", $(formElement).serialize(), null, "json")
-            .done(function () {
-                $("#borrow-book-modal").modal('hide');
-                formElement.reset();
+            .done(function (success) {
+                if (success == true) {
+                    $("#borrow-book-modal").modal('hide');
+                    formElement.reset();
+                    self.getUserBookCollection();
+                } else {
+                    alert("Inputed dates are incorrect, sorry.");
+                }
             });
         }
     };
 
+    self.getUserBookCollection = function () {
+        $.ajax({
+            url: "/api/BorrowingBooks/GetUserBooks",
+            type: "GET",
+            datatype: 'json'
+        }).done(function (data) {
+            self.userBookCollection(data);
+        });
+    };
 
+    self.userBookCollection = ko.observableArray();
 };

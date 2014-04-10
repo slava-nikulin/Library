@@ -61,34 +61,56 @@ namespace LibraryDAL
         [DataMember]
         public string ISBN { get; set; }
 
+        [DataMember]
+        public int Status { get; set; }
+
         [ScriptIgnore]
         public virtual ICollection<UserBook> UserBookCollection { get; set; }
     }
 
     [Table("LibraryUsers")]
+    [DataContract]
+    [Serializable]
     public class LibraryUser
     {
         [Key]
         [DatabaseGeneratedAttribute(DatabaseGeneratedOption.Identity)]
+        [DataMember]
         public int LibraryUserId { get; set; }
+        [DataMember]
         public string UserName { get; set; }
+        [DataMember]
         public string Email { get; set; }
-
+        [DataMember]
         public virtual ICollection<UserBook> UserBookCollection { get; set; }
     }
 
     [Table("UserBook")]
+    [Serializable]
+    [DataContract]
     public class UserBook
     {
+        [DataMember]
         public int BookId { get; set; }
+        [DataMember]
         public int LibraryUserId { get; set; }
-
+        [DataMember]
         public DateTime StartDate { get; set; }
+        [DataMember]
         public DateTime EndDate { get; set; }
 
-        public virtual Book Book { get; set; }
-        public virtual LibraryUser LibraryUser { get; set; }
 
-        
+        [ScriptIgnore]
+        public virtual Book Book { get; set; }
+        [ScriptIgnore]
+        public virtual LibraryUser LibraryUser { get; set; }
+    }
+
+
+    public enum BookStatus
+    {
+        ReadyForPickup = 1,
+        Issued = 2,
+        Lost = 3
     }
 }

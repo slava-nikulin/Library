@@ -9,6 +9,7 @@ using System.Web.Http;
 using System.Web.Security;
 using Library.Models;
 using LibraryDAL;
+using Newtonsoft.Json;
 using WebMatrix.WebData;
 
 namespace Library.Controllers
@@ -35,7 +36,7 @@ namespace Library.Controllers
         public ListResult GetUsers(string searchKey, int pageind, int pagesize, string currcol, string sort)
         {
             var total = db.LibraryUsers.Count();
-            var users = db.LibraryUsers.Where(usr => usr.UserName != User.Identity.Name).ToList();
+            var users = db.LibraryUsers.Include("UserBookCollection").Where(usr => usr.UserName != User.Identity.Name).ToList();
             if (!string.IsNullOrEmpty(searchKey) && !string.IsNullOrWhiteSpace(searchKey))
             {
                 users = users.Where(
@@ -54,6 +55,7 @@ namespace Library.Controllers
                 }
 
             }
+            var j = new JsonSerializer();
             return new ListResult
             {
                 ResultLines = users.Skip(pageind * pagesize).Take(pagesize).ToList(),

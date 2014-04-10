@@ -41,6 +41,24 @@ namespace Library.Controllers
             public string SortType { get; set; }
         }
 
+        [Serializable]
+        [DataContract]
+        public class ReservedBook
+        {
+            [DataMember]
+            public string Name { get; set; }
+            [DataMember]
+            public string Author { get; set; }
+            [DataMember]
+            public int BookId { get; set; }
+            [DataMember]
+            public string EndDate { get; set; }
+            [DataMember]
+            public string StartDate { get; set; }
+            [DataMember]
+            public int Status { get; set; }
+        }
+
 
         private LibraryContext db = new LibraryContext();
 
@@ -77,13 +95,26 @@ namespace Library.Controllers
 
         }
 
-        // GET api/<controller>/5
-        public string GetBookBorrowingData(int id)
+        public IEnumerable<string> GetBookBorrowingData(int bookId)
         {
-            return "value";
+            var currentBookDates = db.Books.Single(book => book.BookId == bookId).UserBookCollection;
+            var dates = new List<DateTime>();
+
+            foreach (var reserve in currentBookDates)
+            {
+                for (var dt = reserve.StartDate; dt <= reserve.EndDate; dt = dt.AddDays(1))
+                {
+                    if (dates.All(la => !la.Equals(dt)))
+                    {
+                        dates.Add(dt);
+                    }
+                }
+            }
+
+            return dates.Select(la => la.ToString("dd-MM-yyyy"));
         }
 
-        public void ReserveTheBook(AccountRoomModel model)
+        public bool ReserveTheBook(AccountRoomModel model)
         {
             var selectedBook = db.Books.SingleOrDefault(book => book.BookId == model.BorrowLend.BookId);
 
@@ -96,7 +127,7 @@ namespace Library.Controllers
                 {
                     if (!DateTime.TryParseExact(model.BorrowLend.FromDate, "dd.MM.yyyy", null, DateTimeStyles.None, out fromDateTime))
                     {
-                        return;
+                        return false;
                     }
                 }
             }
@@ -106,11 +137,16 @@ namespace Library.Controllers
                 {
                     if (!DateTime.TryParseExact(model.BorrowLend.ToDate, "dd.MM.yyyy", null, DateTimeStyles.None, out toDateTime))
                     {
-                        return;
+                        return false;
                     }
                 }
             }
-            
+
+            if (toDateTime < fromDateTime)
+            {
+                return false;
+            }
+
             if (selectedBook != null)
             {
                 selectedBook.UserBookCollection.Add(new UserBook
@@ -118,17 +154,27 @@ namespace Library.Controllers
                     Book = selectedBook,
                     BookId = selectedBook.BookId,
                     EndDate = toDateTime,
-                    LibraryUser = db.LibraryUsers.Single(usr=>usr.UserName == User.Identity.Name),
+                    LibraryUser = db.LibraryUsers.Single(usr => usr.UserName == User.Identity.Name),
                     LibraryUserId = db.LibraryUsers.Single(usr => usr.UserName == User.Identity.Name).LibraryUserId,
                     StartDate = fromDateTime
                 });
             }
             db.SaveChanges();
+
+            return true;
         }
 
-        // POST api/<controller>
-        public void Post([FromBody]string value)
+        public IEnumerable<ReservedBook> GetUserBooks()
         {
+            return db.LibraryUsers.Single(usr => usr.UserName == User.Identity.Name).UserBookCollection.Select(la => new ReservedBook
+            {
+                BookId = la.BookId,
+                Author = la.Book.Author,
+                Name = la.Book.Name,
+                EndDate = la.EndDate.ToString("d MMM yyyy"),
+                StartDate = la.StartDate.ToString("d MMM yyyy"),
+                Status = la.Book.Status
+            });
         }
 
         // PUT api/<controller>/5

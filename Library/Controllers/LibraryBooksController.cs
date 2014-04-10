@@ -77,7 +77,8 @@ namespace Library.Controllers
                     Author = model.EditBook.Author,
                     Name = model.EditBook.Name,
                     Description = model.EditBook.Description,
-                    ISBN = model.EditBook.Isbn
+                    ISBN = model.EditBook.Isbn,
+                    Status = (int)BookStatus.ReadyForPickup
                 };
 
                 db.Books.Add(newBook);
