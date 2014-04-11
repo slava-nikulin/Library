@@ -8,36 +8,83 @@
 
 var BooksViewModel = function () {
     var self = this;
-    self.books = ko.observableArray();
-    self.sortType = ko.observable("asc");
-    self.currentColumn = ko.observable("");
+    self.lines = ko.observableArray();
     self.iconType = ko.observable("");
-    self.totalLines = ko.observable(0);
     self.searchKey = ko.observable("");
     self.currentPage = ko.observable();
-    self.pageSize = ko.observable(10);
-    self.currentPageIndex = ko.observable(0);
     self.isNewLine = ko.observable(true);
     self.selectedLine = ko.observable();
-
+    self.selectedIssuedBook = ko.observable();
 
     self.searchByKey = function () {
         self.searchKey($("#search-book-input").val());
     };
 
-    self.totalPages = ko.computed(function () {
-        return Math.ceil(self.totalLines() / self.pageSize());
+    self.pagingSorting = {};
+    self.pagingSorting.parameters = {
+        PageSize: ko.observable(10),
+        CurrentPageIndex: ko.observable(0),
+        SortType: ko.observable("asc"),
+        CurrentColumn: ko.observable("")
+    };
+    self.pagingSorting.totalLines = ko.observable(0);
+    self.pagingSorting.totalPages = ko.computed(function () {
+        return Math.ceil(self.pagingSorting.totalLines() / self.pagingSorting.parameters.PageSize());
     });
+    self.pagingSorting.previousPage = function () {
+        if (self.pagingSorting.parameters.CurrentPageIndex() > 0) {
+            self.pagingSorting.parameters.CurrentPageIndex(self.pagingSorting.parameters.CurrentPageIndex() - 1);
+        } else {
+            self.pagingSorting.parameters.CurrentPageIndex((Math.ceil(self.pagingSorting.totalLines() / self.pagingSorting.parameters.PageSize())) - 1);
+        }
+    };
+    self.pagingSorting.nextPage = function () {
+        if (((self.pagingSorting.parameters.CurrentPageIndex() + 1) * self.pagingSorting.parameters.PageSize()) < self.pagingSorting.totalLines()) {
+            self.pagingSorting.parameters.CurrentPageIndex(self.pagingSorting.parameters.CurrentPageIndex() + 1);
+        } else {
+            self.pagingSorting.parameters.CurrentPageIndex(0);
+        }
+    };
+    self.pagingSorting.changePageSize = function (data, event) {
+        var newPageSize = parseInt($(event.target).attr("data-size"), 10);
+        if (((self.pagingSorting.parameters.CurrentPageIndex()) * newPageSize) >= self.pagingSorting.totalLines()) {
+            self.pagingSorting.parameters.CurrentPageIndex(0).PageSize(newPageSize);
+        } else {
+            self.pagingSorting.parameters.PageSize(newPageSize);
+        }
+    };
+
+    self.pagingSorting.sortTable = function (data, event) {
+        var sortBy = event.target.nodeName.toLowerCase() == "i" ?
+            $(event.target).parent().attr("data-model-property") :
+            $(event.target).attr("data-model-property");
+
+        if (sortBy == "do-not-sort") {
+            return;
+        }
+
+        if (self.pagingSorting.parameters.CurrentColumn() == sortBy) {
+            if (self.pagingSorting.parameters.SortType() == 'asc') {
+                self.iconType('glyphicon glyphicon-chevron-down');
+                self.pagingSorting.parameters.SortType('desc').CurrentColumn(sortBy);
+            } else {
+                self.iconType('glyphicon glyphicon-chevron-up');
+                self.pagingSorting.parameters.SortType('asc').CurrentColumn(sortBy);
+            }
+        } else {
+            self.pagingSorting.parameters.SortType("asc").CurrentColumn(sortBy);
+            self.iconType('glyphicon glyphicon-chevron-up');
+        }
+    };
 
     var getLines = function () {
         $.ajax({
-            url: "/api/LibraryBooks/GetBooks",
+            url: "/api/LibraryBooks/GetBooks?paging=" + ko.toJSON(self.pagingSorting.parameters) + '&search=' + self.searchKey(),
             type: "GET",
-            datatype: 'json',
-            data: { searchKey: self.searchKey(), pageind: self.currentPageIndex(), pagesize: self.pageSize(), currcol: self.currentColumn(), sort: self.sortType() },
+            datatype: 'json'
         }).done(function (data) {
-            self.totalLines(data.TotalLines);
-            self.books(data.ResultBooks);
+            self.pagingSorting.totalLines(data.TotalLines);
+            self.lines(data.ResultLines);
             return data.ResultBooks;
         });
     };
@@ -57,31 +104,6 @@ var BooksViewModel = function () {
     self.currentPage = ko.computed(function () {
         getLines();
     }).extend({ rateLimit: 50 });
-
-    self.nextPage = function () {
-        if (((self.currentPageIndex() + 1) * self.pageSize()) < self.totalLines()) {
-            self.currentPageIndex(self.currentPageIndex() + 1);
-        } else {
-            self.currentPageIndex(0);
-        }
-    };
-
-    self.previousPage = function () {
-        if (self.currentPageIndex() > 0) {
-            self.currentPageIndex(self.currentPageIndex() - 1);
-        } else {
-            self.currentPageIndex((Math.ceil(self.totalLines() / self.pageSize())) - 1);
-        }
-    };
-
-    self.changePageSize = function (data, event) {
-        var newPageSize = parseInt($(event.target).attr("data-size"), 10);
-        if (((self.currentPageIndex()) * newPageSize) >= self.totalLines()) {
-            self.currentPageIndex(0).pageSize(newPageSize);
-        } else {
-            self.pageSize(newPageSize);
-        }
-    };
 
     self.editLine = function (data) {
         var d;
@@ -103,11 +125,11 @@ var BooksViewModel = function () {
                     url: '/api/LibraryBooks/DeleteBook/' + bookId,
                     type: 'DELETE',
                 }).done((function () {
-                    if (self.totalLines() - 1 == 0) {
+                    if (self.pagingSorting.totalLines() - 1 == 0) {
                         getLines();
                     } else {
-                        if (((self.currentPageIndex()) * self.pageSize()) >= self.totalLines() - 1) {
-                            self.currentPageIndex(0);
+                        if (((self.pagingSorting.currentPageIndex()) * self.pagingSorting.pageSize()) >= self.pagingSorting.totalLines() - 1) {
+                            self.pagingSorting.currentPageIndex(0);
                         } else {
                             getLines();
                         }
@@ -120,26 +142,42 @@ var BooksViewModel = function () {
         }
     };
 
-    self.sortTable = function (data, event) {
-        var sortBy = event.target.nodeName.toLowerCase() == "i" ?
-            $(event.target).parent().attr("data-model-property") :
-            $(event.target).attr("data-model-property");
 
-        if (sortBy == "do-not-sort") {
-            return;
-        }
+    self.getUserBookCollection = function () {
+        $.ajax({
+            url: "/api/LibraryBooks/GetUserBooks",
+            type: "GET",
+            datatype: 'json'
+        }).done(function (data) {
+            self.userBookCollection(data);
+        });
+    };
 
-        if (self.currentColumn() == sortBy) {
-            if (self.sortType() == 'asc') {
-                self.iconType('glyphicon glyphicon-chevron-down');
-                self.sortType('desc').currentColumn(sortBy);
-            } else {
-                self.iconType('glyphicon glyphicon-chevron-up');
-                self.sortType('asc').currentColumn(sortBy);
-            }
+    self.userBookCollection = ko.observableArray();
+
+    self.issueTheBook = function(data) {
+        $.ajax({
+            url: "/api/LibraryBooks/ChangeBookStatus?bookId=" + data.BookId + "&newSatus=2",
+            type: "POST",
+            datatype: 'json'
+        }).done(function () {
+            self.getUserBookCollection();
+        });
+    };
+
+    self.returnTheBook = function () {
+        if (self.selectedIssuedBook().Status == '2') {
+            $("#custom-validation").html("Please, select new status");
         } else {
-            self.sortType("asc").currentColumn(sortBy);
-            self.iconType('glyphicon glyphicon-chevron-up');
+            $.ajax({
+                url: "/api/LibraryBooks/ReturnTheBook?bookId=" + self.selectedIssuedBook().BookId + "&userId="
+                    + self.selectedIssuedBook().UserId + "&newSatus=" + self.selectedIssuedBook().Status,
+                type: "POST",
+                datatype: 'json'
+            }).done(function () {
+                $("#ret-book-modal").modal('hide');
+                self.getUserBookCollection();
+            });
         }
     };
 };

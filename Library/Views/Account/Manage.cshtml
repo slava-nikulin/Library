@@ -24,7 +24,10 @@
         @if (ViewBag.IsLibrarian)
         {
             <text>$(document).ready(function () {
-            ko.applyBindings(new BooksViewModel(), document.getElementById("books-crud"));
+            var booksModel = new BooksViewModel();
+            booksModel.getUserBookCollection();
+            ko.applyBindings(booksModel, document.getElementById("books-issuing-returning"));
+            ko.applyBindings(booksModel, document.getElementById("books-crud"));
             ko.applyBindings(new UsersViewModel(), document.getElementById("users-crud"));
             });</text>
         }

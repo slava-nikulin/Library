@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Runtime.Serialization;
 using System.Web.Http;
 using System.Web.Mvc;
+using Library.Classes;
 using Library.Models;
 using LibraryDAL;
 using Newtonsoft.Json;
@@ -15,46 +17,37 @@ namespace Library.Controllers
     [System.Web.Http.Authorize]
     public class LibraryBooksController : ApiController
     {
-        [Serializable]
-        [DataContract]
-        public class ListResult
-        {
-            [DataMember]
-            public int TotalLines { get; set; }
-            [DataMember]
-            public IEnumerable<Book> ResultBooks { get; set; }
-        }
-
-
         private LibraryContext db = new LibraryContext();
 
         // GET api/LibraryBooks
         [System.Web.Mvc.AcceptVerbs("GET", "POST")]
-        public ListResult GetBooks(string searchKey, int pageind, int pagesize, string currcol, string sort)
+        public ListResult GetBooks(string search, string paging)
         {
+            var pagingData = JsonConvert.DeserializeObject<PagingData>(paging);
+
             var total = db.Books.Count();
             var books = db.Books.ToList();
-            if (!string.IsNullOrEmpty(searchKey) && !string.IsNullOrWhiteSpace(searchKey))
+            if (!string.IsNullOrEmpty(search) && !string.IsNullOrWhiteSpace(search))
             {
                 books = books.Where(
                     la =>
-                        la.Name.StartsWith(searchKey, StringComparison.OrdinalIgnoreCase) ||
-                        la.Author.StartsWith(searchKey, StringComparison.OrdinalIgnoreCase)).ToList();
+                        la.Name.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                        la.Author.Contains(search, StringComparison.OrdinalIgnoreCase)).ToList();
                 total = books.Count;
             }
-            if (!string.IsNullOrEmpty(currcol) && !string.IsNullOrWhiteSpace(currcol))
+            if (!string.IsNullOrEmpty(pagingData.CurrentColumn) && !string.IsNullOrWhiteSpace(pagingData.CurrentColumn))
             {
-                if (!string.IsNullOrEmpty(sort) && !string.IsNullOrWhiteSpace(sort))
+                if (!string.IsNullOrEmpty(pagingData.SortType) && !string.IsNullOrWhiteSpace(pagingData.SortType))
                 {
-                    books = sort == "asc"
-                        ? books.OrderBy(la => la.GetType().GetProperty(currcol).GetValue(la, null)).ToList()
-                        : books.OrderByDescending(la => la.GetType().GetProperty(currcol).GetValue(la, null)).ToList();
+                    books = pagingData.SortType == "asc"
+                        ? books.OrderBy(la => la.GetType().GetProperty(pagingData.CurrentColumn).GetValue(la, null)).ToList()
+                        : books.OrderByDescending(la => la.GetType().GetProperty(pagingData.CurrentColumn).GetValue(la, null)).ToList();
                 }
 
             }
             return new ListResult
             {
-                ResultBooks = books.Skip(pageind * pagesize).Take(pagesize).ToList(),
+                ResultLines = books.Skip(pagingData.CurrentPageIndex * pagingData.PageSize).Take(pagingData.PageSize).ToList(),
                 TotalLines = total
             };
 
@@ -112,6 +105,41 @@ namespace Library.Controllers
             }
             db.SaveChanges();
         }
+
+        public IEnumerable<ReservedBook> GetUserBooks()
+        {
+            var res = db.LibraryUsers.SelectMany(
+                    usr => usr.UserBookCollection.Where(la => DbFunctions.TruncateTime(la.StartDate) <= DateTime.Today
+                                                              &&
+                                                              (la.Book.Status == (int) BookStatus.Issued ||
+                                                               la.Book.Status == (int) BookStatus.ReadyForPickup)))
+                    .ToList().Select(la1 => new ReservedBook
+                    {
+                        UserName = la1.LibraryUser.UserName,
+                        BookId = la1.BookId,
+                        EndDate = la1.EndDate.ToString("d MMM yyyy"),
+                        StartDate = la1.StartDate.ToString("d MMM yyyy"),
+                        Name = la1.Book.Name,
+                        Status = la1.Book.Status,
+                        UserId = la1.LibraryUserId
+                    });
+            return res;
+        }
+
+        public void ChangeBookStatus(int bookId, int newSatus)
+        {
+            db.Books.Single(book => book.BookId == bookId).Status = newSatus;
+            db.SaveChanges();
+        }
+
+        public void ReturnTheBook(int bookId, int userId, int newSatus)
+        {
+            var retBook = db.Books.Single(book => book.BookId == bookId);
+            retBook.Status = newSatus;
+            retBook.UserBookCollection.Remove(retBook.UserBookCollection.Single(la => la.LibraryUserId == userId && bookId == la.BookId));
+            db.SaveChanges();
+        }
+
 
         protected override void Dispose(bool disposing)
         {
