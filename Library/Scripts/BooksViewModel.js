@@ -1,9 +1,15 @@
-﻿var BaseModel = function () {
+﻿var BaseBookModel = function () {
     this.Author = "";
     this.BookId = 0;
     this.Description = "";
     this.ISBN = "";
     this.Name = "";
+    this.Category = { CategoryId: 0, CategoryName: '' };
+};
+
+var Category = function (name, id) {
+    this.CategoryName = name;
+    this.CategoryId = id;
 };
 
 var BooksViewModel = function () {
@@ -15,6 +21,8 @@ var BooksViewModel = function () {
     self.isNewLine = ko.observable(true);
     self.selectedLine = ko.observable();
     self.selectedIssuedBook = ko.observable();
+    self.allCategories = ko.observableArray();
+    self.userBookCollection = ko.observableArray();
 
     self.searchByKey = function () {
         self.searchKey($("#search-book-input").val());
@@ -84,7 +92,7 @@ var BooksViewModel = function () {
             datatype: 'json'
         }).done(function (data) {
             self.pagingSorting.totalLines(data.TotalLines);
-            self.lines(data.ResultLines);
+            self.lines(JSON.parse(data.ResultLines));
             return data.ResultBooks;
         });
     };
@@ -92,13 +100,51 @@ var BooksViewModel = function () {
     self.saveLine = function (formElement) {
         $(formElement).validate();
         if ($(formElement).valid()) {
-            $.post("/api/LibraryBooks/SaveBook", $(formElement).serialize(), null, "json")
-            .done(function () {
-                $("#add-book-modal").modal('hide');
-                formElement.reset();
-                getLines();
-            });
+            var cat;
+            for (var i = 0; i < self.allCategories().length; i++) {
+                if (self.allCategories()[i].CategoryId == self.selectedLine().Category.CategoryId) {
+                    cat = new Category(self.allCategories()[i].CategoryName, self.selectedLine().Category.CategoryId);
+                    break;
+                }
+            }
+
+            var catsToAdd = [];
+            for (i = 0; i < self.allCategories().length; i++) {
+                if (self.allCategories()[i].CategoryId == -1) {
+                    catsToAdd.push(self.allCategories()[i]);
+                }
+            }
+            if (cat) {
+                $.ajax({
+                    dataType: 'json',
+                    type: 'post',
+                    url: '/api/LibraryBooks/SaveBook?book=' + ko.toJSON({
+                        Author: self.selectedLine().Author,
+                        BookId: self.selectedLine().BookId,
+                        Description: self.selectedLine().Description,
+                        ISBN: self.selectedLine().ISBN,
+                        Name: self.selectedLine().Name,
+                        Category: cat
+                    }) + '&categories=' + ko.toJSON(catsToAdd)
+                }).done(function (resp) {
+                    $("#add-book-modal").modal('hide');
+                    formElement.reset();
+                    getLines();
+                    self.getAllCategories();
+                });
+            }
         }
+    };
+
+    self.getAllCategories = function() {
+        $.ajax({
+            dataType: 'json',
+            type: 'GET',
+            url: '/api/LibraryBooks/GetBookCategories'
+        }).done(function (response) {
+            //ko.utils.arrayPushAll(self.allCategories, response);
+            self.allCategories(response);
+        });
     };
 
     self.currentPage = ko.computed(function () {
@@ -111,7 +157,7 @@ var BooksViewModel = function () {
             d = data;
             self.isNewLine(false);
         } else {
-            d = new BaseModel();
+            d = new BaseBookModel();
             self.isNewLine(true);
         }
         self.selectedLine(d);
@@ -128,8 +174,8 @@ var BooksViewModel = function () {
                     if (self.pagingSorting.totalLines() - 1 == 0) {
                         getLines();
                     } else {
-                        if (((self.pagingSorting.currentPageIndex()) * self.pagingSorting.pageSize()) >= self.pagingSorting.totalLines() - 1) {
-                            self.pagingSorting.currentPageIndex(0);
+                        if (((self.pagingSorting.parameters.CurrentPageIndex()) * self.pagingSorting.parameters.PageSize()) >= self.pagingSorting.totalLines() - 1) {
+                            self.pagingSorting.parameters.CurrentPageIndex(0);
                         } else {
                             getLines();
                         }
@@ -142,7 +188,6 @@ var BooksViewModel = function () {
         }
     };
 
-
     self.getUserBookCollection = function () {
         $.ajax({
             url: "/api/LibraryBooks/GetUserBooks",
@@ -153,9 +198,7 @@ var BooksViewModel = function () {
         });
     };
 
-    self.userBookCollection = ko.observableArray();
-
-    self.issueTheBook = function(data) {
+    self.issueTheBook = function (data) {
         $.ajax({
             url: "/api/LibraryBooks/ChangeBookStatus?bookId=" + data.BookId + "&newSatus=2",
             type: "POST",
@@ -178,6 +221,28 @@ var BooksViewModel = function () {
                 $("#ret-book-modal").modal('hide');
                 self.getUserBookCollection();
             });
+        }
+    };
+
+    self.addCategory = function() {
+        var newCatName = $("#newcat").val();
+        if (newCatName == "") {
+            alert("Please enter category name");
+        } else {
+            var found = false;
+            for (var i = 0; i < self.selectedLine().Categories().length; i++) {
+                if (self.selectedLine().Categories()[i].CategoryName.toLowerCase() == newCatName.toLowerCase()) {
+                    found = true;
+                    break;
+                }
+            }
+            if (found) {
+                alert("There is already exists category " + newCatName);
+            } else {
+                self.selectedLine().Categories.push(new Category(newCatName, -1));
+                $("#newcat").val('');
+                $('#new-category').hide();
+            }
         }
     };
 };

@@ -510,6 +510,10 @@ input.input-validation-error {
     border: 1px solid #e80c4d;
 }
 
+select.input-validation-error {
+border: 1px solid #e80c4d;
+}
+
 input[type="checkbox"].input-validation-error {
     border: 0 none;
 }

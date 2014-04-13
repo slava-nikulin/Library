@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Runtime.Serialization;
 using System.Web.Http;
 using System.Web.Mvc;
+using System.Web.Script.Serialization;
 using Library.Classes;
 using Library.Models;
 using LibraryDAL;
@@ -19,9 +20,8 @@ namespace Library.Controllers
     {
         private LibraryContext db = new LibraryContext();
 
-        // GET api/LibraryBooks
         [System.Web.Mvc.AcceptVerbs("GET", "POST")]
-        public ListResult GetBooks(string search, string paging)
+        public Object GetBooks(string search, string paging)
         {
             var pagingData = JsonConvert.DeserializeObject<PagingData>(paging);
 
@@ -45,32 +45,49 @@ namespace Library.Controllers
                 }
 
             }
-            return new ListResult
+            return new
             {
-                ResultLines = books.Skip(pagingData.CurrentPageIndex * pagingData.PageSize).Take(pagingData.PageSize).ToList(),
+                ResultLines = JsonConvert.SerializeObject(books.Skip(pagingData.CurrentPageIndex * pagingData.PageSize).Take(pagingData.PageSize).ToList()),
                 TotalLines = total
             };
 
         }
 
-        // GET api/<LibraryBooks>/5
-        public Book GetBook(int id)
+        public bool SaveBook(string book, string categories)
         {
-            return db.Books.SingleOrDefault(book => book.BookId == id);
-        }
+            var categsToAdd = JsonConvert.DeserializeObject<List<BookCategory>>(categories);
+            var bookData = JsonConvert.DeserializeObject<Book>(book);
 
-        // POST api/<LibraryBooks>
+            if (categsToAdd.Any())
+            {
+                foreach (var catToadd in categsToAdd)
+                {
+                    db.Categories.Add(new BookCategory
+                    {
+                        CategoryName = catToadd.CategoryName
+                    });
+                }
+                db.SaveChanges();
+            }
 
-        public void SaveBook(AccountRoomModel model)
-        {
-            if (model.EditBook.BookId == 0)
+            var bookCategory = bookData.Category.CategoryId == -1
+                ? db.Categories.SingleOrDefault(la => la.CategoryName == bookData.Category.CategoryName)
+                : db.Categories.SingleOrDefault(la => la.CategoryId == bookData.Category.CategoryId);
+
+            if (bookCategory == null)
+            {
+                return false;
+            }
+
+            if (bookData.BookId == 0)
             {
                 var newBook = new Book
                 {
-                    Author = model.EditBook.Author,
-                    Name = model.EditBook.Name,
-                    Description = model.EditBook.Description,
-                    ISBN = model.EditBook.Isbn,
+                    Author = bookData.Author,
+                    Name = bookData.Name,
+                    Description = bookData.Description,
+                    ISBN = bookData.ISBN,
+                    Category = bookCategory,
                     Status = (int)BookStatus.ReadyForPickup
                 };
 
@@ -78,24 +95,20 @@ namespace Library.Controllers
             }
             else
             {
-                var bookToEdit = db.Books.SingleOrDefault(book => book.BookId == model.EditBook.BookId);
+                var bookToEdit = db.Books.SingleOrDefault(b => b.BookId == bookData.BookId);
                 if (bookToEdit != null)
                 {
-                    bookToEdit.Author = model.EditBook.Author;
-                    bookToEdit.Description = model.EditBook.Description;
-                    bookToEdit.ISBN = model.EditBook.Isbn;
-                    bookToEdit.Name = model.EditBook.Name;
+                    bookToEdit.Author = bookData.Author;
+                    bookToEdit.Description = bookData.Description;
+                    bookToEdit.ISBN = bookData.ISBN;
+                    bookToEdit.Category = bookCategory;
+                    bookToEdit.Name = bookData.Name;
                 }
             }
             db.SaveChanges();
+            return true;
         }
 
-        // PUT api/<LibraryBooks>/5
-        public void Put(int id, [FromBody]string value)
-        {
-        }
-
-        // DELETE api/<controller>/5
         public void DeleteBook(int id)
         {
             var bookToDelete = db.Books.SingleOrDefault(book => book.BookId == id);
@@ -106,13 +119,18 @@ namespace Library.Controllers
             db.SaveChanges();
         }
 
+        public IEnumerable<BookCategory> GetBookCategories()
+        {
+            return db.Categories;
+        }
+
         public IEnumerable<ReservedBook> GetUserBooks()
         {
             var res = db.LibraryUsers.SelectMany(
                     usr => usr.UserBookCollection.Where(la => DbFunctions.TruncateTime(la.StartDate) <= DateTime.Today
                                                               &&
-                                                              (la.Book.Status == (int) BookStatus.Issued ||
-                                                               la.Book.Status == (int) BookStatus.ReadyForPickup)))
+                                                              (la.Book.Status == (int)BookStatus.Issued ||
+                                                               la.Book.Status == (int)BookStatus.ReadyForPickup)))
                     .ToList().Select(la1 => new ReservedBook
                     {
                         UserName = la1.LibraryUser.UserName,
@@ -139,7 +157,6 @@ namespace Library.Controllers
             retBook.UserBookCollection.Remove(retBook.UserBookCollection.Single(la => la.LibraryUserId == userId && bookId == la.BookId));
             db.SaveChanges();
         }
-
 
         protected override void Dispose(bool disposing)
         {

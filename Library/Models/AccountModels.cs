@@ -82,6 +82,13 @@ namespace Library.Models
         [Display(Name = "Author")]
         public string Author { get; set; }
 
+        [Required]
+        [Display(Name = "Category")]
+        public int CategoryId { get; set; }
+
+        [Display(Name = "Tags")]
+        public ICollection<BookTag> Tags { get; set; }
+
         [Display(Name = "Description")]
         public string Description { get; set; }
     }

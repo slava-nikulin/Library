@@ -26,6 +26,7 @@
             <text>$(document).ready(function () {
             var booksModel = new BooksViewModel();
             booksModel.getUserBookCollection();
+            booksModel.getAllCategories();
             ko.applyBindings(booksModel, document.getElementById("books-issuing-returning"));
             ko.applyBindings(booksModel, document.getElementById("books-crud"));
             ko.applyBindings(new UsersViewModel(), document.getElementById("users-crud"));
