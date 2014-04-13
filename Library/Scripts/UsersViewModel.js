@@ -22,23 +22,6 @@ var UsersViewModel = function () {
         self.searchKey($("#search-user-input").val());
     };
 
-    self.totalPages = ko.computed(function () {
-        return Math.ceil(self.totalLines() / self.pageSize());
-    });
-
-    var getLines = function () {
-        $.ajax({
-            url: "/api/Users/GetUsers",
-            type: "GET",
-            datatype: 'json',
-            data: { searchKey: self.searchKey(), pageind: self.currentPageIndex(), pagesize: self.pageSize(), currcol: self.currentColumn(), sort: self.sortType() },
-        }).done(function (data) {
-            self.totalLines(data.TotalLines);
-            self.lines(data.ResultLines);
-            return data.ResultLines;
-        });
-    };
-
     self.saveLine = function (formElement) {
         $(formElement).validate();
         if ($(formElement).valid()) {
@@ -51,34 +34,78 @@ var UsersViewModel = function () {
         }
     };
 
+    self.pagingSorting = {};
+    self.pagingSorting.parameters = {
+        PageSize: ko.observable(10),
+        CurrentPageIndex: ko.observable(0),
+        SortType: ko.observable("asc"),
+        CurrentColumn: ko.observable("")
+    };
+    self.pagingSorting.totalLines = ko.observable(0);
+    self.pagingSorting.totalPages = ko.computed(function () {
+        return Math.ceil(self.pagingSorting.totalLines() / self.pagingSorting.parameters.PageSize());
+    });
+    self.pagingSorting.previousPage = function () {
+        if (self.pagingSorting.parameters.CurrentPageIndex() > 0) {
+            self.pagingSorting.parameters.CurrentPageIndex(self.pagingSorting.parameters.CurrentPageIndex() - 1);
+        } else {
+            self.pagingSorting.parameters.CurrentPageIndex((Math.ceil(self.pagingSorting.totalLines() / self.pagingSorting.parameters.PageSize())) - 1);
+        }
+    };
+    self.pagingSorting.nextPage = function () {
+        if (((self.pagingSorting.parameters.CurrentPageIndex() + 1) * self.pagingSorting.parameters.PageSize()) < self.pagingSorting.totalLines()) {
+            self.pagingSorting.parameters.CurrentPageIndex(self.pagingSorting.parameters.CurrentPageIndex() + 1);
+        } else {
+            self.pagingSorting.parameters.CurrentPageIndex(0);
+        }
+    };
+    self.pagingSorting.changePageSize = function (data, event) {
+        var newPageSize = parseInt($(event.target).attr("data-size"), 10);
+        if (((self.pagingSorting.parameters.CurrentPageIndex()) * newPageSize) >= self.pagingSorting.totalLines()) {
+            self.pagingSorting.parameters.CurrentPageIndex(0).PageSize(newPageSize);
+        } else {
+            self.pagingSorting.parameters.PageSize(newPageSize);
+        }
+    };
+
+    self.pagingSorting.sortTable = function (data, event) {
+        var sortBy = event.target.nodeName.toLowerCase() == "i" ?
+            $(event.target).parent().attr("data-model-property") :
+            $(event.target).attr("data-model-property");
+
+        if (sortBy == "do-not-sort") {
+            return;
+        }
+
+        if (self.pagingSorting.parameters.CurrentColumn() == sortBy) {
+            if (self.pagingSorting.parameters.SortType() == 'asc') {
+                self.iconType('glyphicon glyphicon-chevron-down');
+                self.pagingSorting.parameters.SortType('desc').CurrentColumn(sortBy);
+            } else {
+                self.iconType('glyphicon glyphicon-chevron-up');
+                self.pagingSorting.parameters.SortType('asc').CurrentColumn(sortBy);
+            }
+        } else {
+            self.pagingSorting.parameters.SortType("asc").CurrentColumn(sortBy);
+            self.iconType('glyphicon glyphicon-chevron-up');
+        }
+    };
+
+    var getLines = function () {
+        $.ajax({
+            url: "/api/Users/GetUsers?paging=" + ko.toJSON(self.pagingSorting.parameters) + '&search=' + self.searchKey(),
+            type: "GET",
+            datatype: 'json'
+        }).done(function (data) {
+            self.pagingSorting.totalLines(data.TotalLines);
+            self.lines(data.ResultLines);
+            return data.ResultLines;
+        });
+    };
+
     self.currentPage = ko.computed(function () {
         getLines();
     }).extend({ rateLimit: 50 });
-
-    self.nextPage = function () {
-        if (((self.currentPageIndex() + 1) * self.pageSize()) < self.totalLines()) {
-            self.currentPageIndex(self.currentPageIndex() + 1);
-        } else {
-            self.currentPageIndex(0);
-        }
-    };
-
-    self.previousPage = function () {
-        if (self.currentPageIndex() > 0) {
-            self.currentPageIndex(self.currentPageIndex() - 1);
-        } else {
-            self.currentPageIndex((Math.ceil(self.totalLines() / self.pageSize())) - 1);
-        }
-    };
-
-    self.changePageSize = function (data, event) {
-        var newPageSize = parseInt($(event.target).attr("data-size"), 10);
-        if (((self.currentPageIndex()) * newPageSize) >= self.totalLines()) {
-            self.currentPageIndex(0).pageSize(newPageSize);
-        } else {
-            self.pageSize(newPageSize);
-        }
-    };
 
     self.editLine = function (data) {
         var d;
@@ -117,30 +144,15 @@ var UsersViewModel = function () {
         }
     };
 
-    self.sortTable = function (data, event) {
-        var sortBy = event.target.nodeName.toLowerCase() == "i" ?
-            $(event.target).parent().attr("data-model-property") :
-            $(event.target).attr("data-model-property");
+    self.userReservedBooks = ko.observableArray();
 
-        if (sortBy == "do-not-sort") {
-            return;
-        }
-
-        if (self.currentColumn() == sortBy) {
-            if (self.sortType() == 'asc') {
-                self.iconType('glyphicon glyphicon-chevron-down');
-                self.sortType('desc').currentColumn(sortBy);
-            } else {
-                self.iconType('glyphicon glyphicon-chevron-up');
-                self.sortType('asc').currentColumn(sortBy);
-            }
-        } else {
-            self.sortType("asc").currentColumn(sortBy);
-            self.iconType('glyphicon glyphicon-chevron-up');
-        }
-    };
-
-    self.issueBook = function(user) {
-        alert("Not implemented yet!");
+    self.showInfo = function (user) {
+        $.ajax({
+            url: "/api/Users/GetUserInfo?userId=" + user.LibraryUserId,
+            type: "GET",
+            datatype: 'json'
+        }).done(function (data) {
+            self.userReservedBooks(data);
+        });
     };
 };

@@ -40,6 +40,9 @@ namespace Library
             bundles.Add(new StyleBundle("~/Content/default").Include("~/Content/site.css"));
             bundles.Add(new StyleBundle("~/Content/bootstrap").Include("~/Content/bootstrap.css", "~/Content/bootstrap-theme.css"));
 
+            bundles.Add(new StyleBundle("~/Content/bootstrap-tag").Include("~/Content/bootstrap-tagsinput.css"));
+            bundles.Add(new ScriptBundle("~/Scripts/bootstrap-tag").Include("~/Scripts/bootstrap-tagsinput.js"));
+
             bundles.Add(new StyleBundle("~/Content/themes/base/css").Include(
                         "~/Content/themes/base/jquery.ui.core.css",
                         "~/Content/themes/base/jquery.ui.resizable.css",

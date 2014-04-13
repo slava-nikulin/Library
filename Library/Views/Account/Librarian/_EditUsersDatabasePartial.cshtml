@@ -2,10 +2,10 @@
 <div id="users-crud">
     <h3></h3>
 
-    <span data-bind="if: totalLines() == 1">There is no users in the library, yet. Except of you, of course.</span>
+    <span data-bind="if: pagingSorting.totalLines() == 0">There is no users in the library, yet. Except of you, of course.</span>
 
     <div class="container-fluid">
-        <div class="row " data-bind="if: totalLines() > 1 || searchKey() != ''">
+        <div class="row " data-bind="if: pagingSorting.totalLines() > 0 || searchKey() != ''">
             <div class="col-lg-6">
                 <div class="input-group input-group-sm">
                     <input id="search-user-input" type="text" class="form-control">
@@ -16,24 +16,24 @@
             </div>
 
             <div class="col-lg-6">
-                <div data-bind="click: changePageSize" class="btn-group-sm pull-right">
-                    <button data-size="1" type="button" data-bind="attr: { class: pageSize() == '1' ? 'btn btn-default active' : 'btn btn-default' }">Small</button>
-                    <button data-size="2" type="button" data-bind="attr: { class: pageSize() == '2' ? 'btn btn-default active' : 'btn btn-default' }">Normal</button>
-                    <button data-size="3" type="button" data-bind="attr: { class: pageSize() == '3' ? 'btn btn-default active' : 'btn btn-default' }">Large</button>
+                <div data-bind="click: pagingSorting.changePageSize" class="btn-group-sm pull-right">
+                    <button data-size="1" type="button" data-bind="attr: { class: pagingSorting.parameters.PageSize() == '1' ? 'btn btn-default active' : 'btn btn-default' }">Small</button>
+                    <button data-size="2" type="button" data-bind="attr: { class: pagingSorting.parameters.PageSize() == '2' ? 'btn btn-default active' : 'btn btn-default' }">Normal</button>
+                    <button data-size="3" type="button" data-bind="attr: { class: pagingSorting.parameters.PageSize() == '3' ? 'btn btn-default active' : 'btn btn-default' }">Large</button>
                 </div>
             </div>
         </div>
-        <table class="table table-striped table-bordered table-responsive" data-bind="if: totalLines() > 1 || searchKey() != ''">
-            <thead data-bind="click: sortTable">
+        <table class="table table-striped table-bordered table-responsive" data-bind="if: pagingSorting.totalLines() > 0 || searchKey() != ''">
+            <thead data-bind="click: pagingSorting.sortTable">
                 <tr>
                     <th data-model-property="LibraryUserId" class="col-lg-1">User ID
-                        <i data-bind="attr: { class: currentColumn() == 'LibraryUserId' ? iconType() : '' }"></i>
+                        <i data-bind="attr: { class: pagingSorting.parameters.CurrentColumn() == 'LibraryUserId' ? iconType() : '' }"></i>
                     </th>
                     <th data-model-property="UserName" class="col-lg-4">User name
-                        <i data-bind="attr: { class: currentColumn() == 'UserName' ? iconType() : '' }"></i>
+                        <i data-bind="attr: { class: pagingSorting.parameters.CurrentColumn() == 'UserName' ? iconType() : '' }"></i>
                     </th>
                     <th data-model-property="Email" class="col-lg-4">Email
-                        <i data-bind="attr: { class: currentColumn() == 'Email' ? iconType() : '' }"></i>
+                        <i data-bind="attr: { class: pagingSorting.parameters.CurrentColumn() == 'Email' ? iconType() : '' }"></i>
                     </th>
                     <th data-model-property="do-not-sort" class="col-lg-1"></th>
                     <th data-model-property="do-not-sort" class="col-lg-1"></th>
@@ -44,7 +44,7 @@
                     <td data-bind="text: LibraryUserId"></td>
                     <td data-bind="text: UserName"></td>
                     <td data-bind="text: Email"></td>
-                    <td class="text-center"><i class="glyphicon glyphicon-book" data-bind="click: function () { $root.issueBook($data); }"></i></td>
+                    <td class="text-center"><i data-toggle="modal" data-target="#user-info" class="glyphicon glyphicon-book cursor-hand" data-bind="click: function () { $root.showInfo($data); }"></i></td>
                     <td class="text-center"><i class="glyphicon glyphicon-remove cursor-hand" data-bind="click: function () { $root.deleteLine($data); }"></i></td>
                 </tr>
             </tbody>
@@ -53,21 +53,19 @@
             <div class=" col-lg-2">
                 <button data-bind="click: function () { $root.editLine(); }" class="btn btn-primary" id="add-new-user" type="button" data-toggle="modal" data-target="#add-user-modal">Add new user</button>
             </div>
-            <div class="col-md-8 col-md-offset-0" data-bind="if: totalLines() > 1 || searchKey() != ''">
+            <div class="col-md-8 col-md-offset-0" data-bind="if: pagingSorting.totalLines() > 0 || searchKey() != ''">
                 <ul class="pager">
-                    <li><a data-bind="click: previousPage" href="#">Previous</a></li>
+                    <li><a data-bind="click: pagingSorting.previousPage" href="#">Previous</a></li>
                     <li>
-                        <label data-bind="text: currentPageIndex() + 1" class="badge"></label>
+                        <label data-bind="text: pagingSorting.parameters.CurrentPageIndex() + 1" class="badge"></label>
                         /
-                        <label data-bind="text: totalPages()" class="badge"></label>
+                        <label data-bind="text: pagingSorting.totalPages()" class="badge"></label>
                     </li>
-                    <li><a data-bind="click: nextPage" href="#">Next</a></li>
+                    <li><a data-bind="click: pagingSorting.nextPage" href="#">Next</a></li>
                 </ul>
             </div>
         </div>
     </div>
-
-
 
     <div class="modal fade" id="add-user-modal" tabindex="-1" role="dialog" aria-labelledby="basicModal" aria-hidden="true">
         <div class="modal-dialog">
@@ -99,6 +97,39 @@
                         <button type="submit" class="btn btn-primary">Save</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="user-info" tabindex="-1" role="dialog" aria-labelledby="basicModal" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">User reserved books</h4>
+                </div>
+                <span class="text-center" data-bind="if: userReservedBooks() == 0">There is no books reserved by this user</span>
+                <div class="modal-body form-horizontal">
+                    <table class="table table-striped table-bordered .table-condensed" data-bind="ifnot: userReservedBooks().length == 0">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Term</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody data-bind="foreach: userReservedBooks">
+                            <tr data-bind="attr: { class: Status == 1 ? 'success' : (new Date()).setTime(Date.parse(EndDate))<(new Date()).getDate() ? 'danger' : 'warning'}">
+                                <td data-bind="text: Name"></td>
+                                <td data-bind="text: StartDate + ' - ' + EndDate"></td>
+                                <td data-bind="text: Status == 1 ? 'Ready for pickup':'Issued'"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
             </div>
         </div>
     </div>

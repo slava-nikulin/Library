@@ -15,11 +15,11 @@
                 </tr>
             </thead>
             <tbody data-bind="foreach: userBookCollection">
-                <tr>
+                <tr data-bind="attr: { class: Status == 1 ? 'success' : (new Date()).setTime(Date.parse(EndDate)) < (new Date()).getDate() ? 'danger' : 'warning' }">
                     <td data-bind="text: UserName"></td>
                     <td data-bind="text: Name"></td>
                     <td data-bind="text: StartDate + ' - ' + EndDate"></td>
-                    <td data-bind="text: Status"></td>
+                    <td data-bind="text: Status == 1 ? 'Ready for pickup' : 'Issued'"></td>
                     <td class="text-center" data-bind="visible: $data.Status == '1'">
                         <span class="label label-default cursor-hand" data-bind="click: function () { $root.issueTheBook($data); }">
                             Issue this book

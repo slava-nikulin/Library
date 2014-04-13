@@ -54,42 +54,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="LibraryDALClasses.cs" />
-    <Compile Include="Migrations\201404100659228_bookstatus.cs" />
-    <Compile Include="Migrations\201404100659228_bookstatus.Designer.cs">
-      <DependentUpon>201404100659228_bookstatus.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201404120707434_tags_category_for_book2.cs" />
-    <Compile Include="Migrations\201404120707434_tags_category_for_book2.Designer.cs">
-      <DependentUpon>201404120707434_tags_category_for_book2.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201404130757013_rename1.cs" />
-    <Compile Include="Migrations\201404130757013_rename1.Designer.cs">
-      <DependentUpon>201404130757013_rename1.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201404130814270_book-cat-relation.cs" />
-    <Compile Include="Migrations\201404130814270_book-cat-relation.Designer.cs">
-      <DependentUpon>201404130814270_book-cat-relation.cs</DependentUpon>
-    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Migrations\201404100659228_bookstatus.resx">
-      <DependentUpon>201404100659228_bookstatus.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201404120707434_tags_category_for_book2.resx">
-      <DependentUpon>201404120707434_tags_category_for_book2.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201404130757013_rename1.resx">
-      <DependentUpon>201404130757013_rename1.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201404130814270_book-cat-relation.resx">
-      <DependentUpon>201404130814270_book-cat-relation.cs</DependentUpon>
-    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />

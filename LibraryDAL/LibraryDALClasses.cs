@@ -27,8 +27,7 @@ namespace LibraryDAL
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<UserBook>()
-                .HasKey(c => new { c.BookId, c.LibraryUserId });
+            modelBuilder.Entity<UserBook>().HasKey(c => c.UserToBookId);
 
             modelBuilder.Entity<Book>()
                 .HasMany(c => c.UserBookCollection)
@@ -50,7 +49,7 @@ namespace LibraryDAL
                 .WithMany(t => t.BooksCollection)
                 .Map(mc =>
                 {
-                    mc.ToTable("BookTag");
+                    mc.ToTable("BookToTags");
                     mc.MapLeftKey("BookId");
                     mc.MapRightKey("TagId");
                 });
@@ -118,6 +117,7 @@ namespace LibraryDAL
     [DataContract]
     public class UserBook
     {
+        internal int UserToBookId { get; set; }
         [DataMember]
         public int BookId { get; set; }
         [DataMember]
@@ -149,7 +149,7 @@ namespace LibraryDAL
         public virtual ICollection<Book> BooksInCategory { get; set; }
     }
 
-    [Table("BooksToTags")]
+    [Table("BooksTag")]
     [Serializable]
     [DataContract]
     public class BookTag

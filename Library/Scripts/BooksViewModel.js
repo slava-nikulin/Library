@@ -5,6 +5,7 @@
     this.ISBN = "";
     this.Name = "";
     this.Category = { CategoryId: 0, CategoryName: '' };
+    //this.TagsCollection = [];
 };
 
 var Category = function (name, id) {
@@ -160,6 +161,8 @@ var BooksViewModel = function () {
             d = new BaseBookModel();
             self.isNewLine(true);
         }
+
+        //$("#tags").tagsinput(d.TagsCollection);
         self.selectedLine(d);
     };
 
@@ -230,8 +233,8 @@ var BooksViewModel = function () {
             alert("Please enter category name");
         } else {
             var found = false;
-            for (var i = 0; i < self.selectedLine().Categories().length; i++) {
-                if (self.selectedLine().Categories()[i].CategoryName.toLowerCase() == newCatName.toLowerCase()) {
+            for (var i = 0; i < self.allCategories().length; i++) {
+                if (self.allCategories()[i].CategoryName.toLowerCase() == newCatName.toLowerCase()) {
                     found = true;
                     break;
                 }
@@ -239,7 +242,7 @@ var BooksViewModel = function () {
             if (found) {
                 alert("There is already exists category " + newCatName);
             } else {
-                self.selectedLine().Categories.push(new Category(newCatName, -1));
+                self.allCategories.push(new Category(newCatName, -1));
                 $("#newcat").val('');
                 $('#new-category').hide();
             }

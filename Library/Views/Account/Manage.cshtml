@@ -18,7 +18,8 @@
 
 @section Scripts {
 
-    
+    @Scripts.Render("~/Scripts/bootstrap-tag")
+    @Styles.Render("~/Content/bootstrap-tag")
     @(ViewBag.IsLibrarian ? @Scripts.Render("~/bundles/LibrarianViewModels") : @Scripts.Render("~/bundles/ReaderViewModels"))
     <script> 
         @if (ViewBag.IsLibrarian)

@@ -103,6 +103,7 @@ var ReaderBooksViewModel = function () {
             var a = disabledDates;
             $("#datepickerTo").datepicker({
                 dateFormat: 'dd-mm-yy',
+                minDate: 0,
                 beforeShowDay: function (date) {
                     var string = jQuery.datepicker.formatDate('dd-mm-yy', date);
                     return [disabledDates.indexOf(string) == -1];
@@ -110,6 +111,7 @@ var ReaderBooksViewModel = function () {
             });
             $("#datepickerFrom").datepicker({
                 dateFormat: 'dd-mm-yy',
+                minDate: 0,
                 beforeShowDay: function (date) {
                     var string = jQuery.datepicker.formatDate('dd-mm-yy', date);
                     return [disabledDates.indexOf(string) == -1];
