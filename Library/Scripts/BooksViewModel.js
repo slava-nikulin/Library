@@ -203,7 +203,7 @@ var BooksViewModel = function () {
 
     self.issueTheBook = function (data) {
         $.ajax({
-            url: "/api/LibraryBooks/ChangeBookStatus?bookId=" + data.BookId + "&newSatus=2",
+            url: "/api/LibraryBooks/IssueTheBook?bookId=" + data.BookId + "&reserveId="+ data.ReserveId,
             type: "POST",
             datatype: 'json'
         }).done(function () {
@@ -216,8 +216,8 @@ var BooksViewModel = function () {
             $("#custom-validation").html("Please, select new status");
         } else {
             $.ajax({
-                url: "/api/LibraryBooks/ReturnTheBook?bookId=" + self.selectedIssuedBook().BookId + "&userId="
-                    + self.selectedIssuedBook().UserId + "&newSatus=" + self.selectedIssuedBook().Status,
+                url: "/api/LibraryBooks/ReturnTheBook?bookId=" + self.selectedIssuedBook().BookId + "&reserveId="
+                    + self.selectedIssuedBook().ReserveId + "&newSatus=" + self.selectedIssuedBook().Status,
                 type: "POST",
                 datatype: 'json'
             }).done(function () {

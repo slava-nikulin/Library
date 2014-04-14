@@ -36,6 +36,8 @@ namespace Library.Classes
     public class ReservedBook
     {
         [DataMember]
+        public int ReserveId { get; set; }
+        [DataMember]
         public string UserName { get; set; }
         [DataMember]
         public string Name { get; set; }

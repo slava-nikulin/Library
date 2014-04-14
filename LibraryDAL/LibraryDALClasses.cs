@@ -24,20 +24,16 @@ namespace LibraryDAL
         public DbSet<LibraryUser> LibraryUsers { get; set; }
         public DbSet<Book> Books { get; set; }
         public DbSet<BookCategory> Categories { get; set; }
-
+        public DbSet<UserBook> UsersToBooks { get; set; }
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             modelBuilder.Entity<UserBook>().HasKey(c => c.UserToBookId);
 
             modelBuilder.Entity<Book>()
-                .HasMany(c => c.UserBookCollection)
-                .WithRequired()
-                .HasForeignKey(c => c.BookId);
+                .HasMany(c => c.UserBookCollection);
 
             modelBuilder.Entity<LibraryUser>()
-                .HasMany(c => c.UserBookCollection)
-                .WithRequired()
-                .HasForeignKey(c => c.LibraryUserId);
+                .HasMany(c => c.UserBookCollection);
 
             modelBuilder.Entity<Book>()
                 .HasRequired(book => book.Category)
@@ -112,12 +108,13 @@ namespace LibraryDAL
         
     }
 
-    [Table("UserBook")]
+    [Table("UserToBook")]
     [Serializable]
     [DataContract]
     public class UserBook
     {
-        internal int UserToBookId { get; set; }
+        [DataMember]
+        public int UserToBookId { get; set; }
         [DataMember]
         public int BookId { get; set; }
         [DataMember]
@@ -126,7 +123,8 @@ namespace LibraryDAL
         public DateTime StartDate { get; set; }
         [DataMember]
         public DateTime EndDate { get; set; }
-
+        [DataMember]
+        public int Status { get; set; }
 
         [ScriptIgnore]
         public virtual Book Book { get; set; }
@@ -169,5 +167,12 @@ namespace LibraryDAL
         ReadyForPickup = 1,
         Issued = 2,
         Lost = 3
+    }
+
+    public enum ReserveStatus
+    {
+        WaitForPickup = 1,
+        WaitForReturn = 2
+        //,Returned = 3
     }
 }

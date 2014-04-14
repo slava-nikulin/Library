@@ -133,28 +133,30 @@ namespace Library.Controllers
                                                                la.Book.Status == (int)BookStatus.ReadyForPickup)))
                     .ToList().Select(la1 => new ReservedBook
                     {
+                        ReserveId = la1.UserToBookId,
                         UserName = la1.LibraryUser.UserName,
                         BookId = la1.BookId,
                         EndDate = la1.EndDate.ToString("d MMM yyyy"),
                         StartDate = la1.StartDate.ToString("d MMM yyyy"),
                         Name = la1.Book.Name,
-                        Status = la1.Book.Status,
+                        Status = la1.Status,
                         UserId = la1.LibraryUserId
                     });
             return res;
         }
 
-        public void ChangeBookStatus(int bookId, int newSatus)
+        public void IssueTheBook(int bookId, int reserveId)
         {
-            db.Books.Single(book => book.BookId == bookId).Status = newSatus;
+            db.Books.Single(book => book.BookId == bookId).Status = (int)BookStatus.Issued;
+            db.UsersToBooks.Single(la => la.UserToBookId == reserveId).Status = (int)ReserveStatus.WaitForReturn;
             db.SaveChanges();
         }
 
-        public void ReturnTheBook(int bookId, int userId, int newSatus)
+        public void ReturnTheBook(int bookId, int reserveId, int newSatus)
         {
             var retBook = db.Books.Single(book => book.BookId == bookId);
             retBook.Status = newSatus;
-            retBook.UserBookCollection.Remove(retBook.UserBookCollection.Single(la => la.LibraryUserId == userId && bookId == la.BookId));
+            db.UsersToBooks.Remove(db.UsersToBooks.Single(la => la.UserToBookId == reserveId));
             db.SaveChanges();
         }
 

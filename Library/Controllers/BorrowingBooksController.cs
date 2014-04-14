@@ -106,14 +106,15 @@ namespace Library.Controllers
 
             if (selectedBook != null)
             {
-                selectedBook.UserBookCollection.Add(new UserBook
+                db.UsersToBooks.Add(new UserBook
                 {
                     Book = selectedBook,
                     BookId = selectedBook.BookId,
                     EndDate = toDateTime,
                     LibraryUser = db.LibraryUsers.Single(usr => usr.UserName == User.Identity.Name),
                     LibraryUserId = db.LibraryUsers.Single(usr => usr.UserName == User.Identity.Name).LibraryUserId,
-                    StartDate = fromDateTime
+                    StartDate = fromDateTime,
+                    Status = (int)ReserveStatus.WaitForPickup
                 });
             }
             db.SaveChanges();
